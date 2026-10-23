@@ -45,6 +45,7 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody.btRigidBodyConstruct
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class Main extends ApplicationAdapter {
 
@@ -77,7 +78,7 @@ public class Main extends ApplicationAdapter {
 
     // Adversaire : cube en patrouille circulaire ("tour du monde") pour tester le dogfight
     private static final float ENEMY_RADIUS = 1000f;   // rayon du circuit (m)
-    private static final float ENEMY_SPEED = 100f;     // m/s (~360 km/h : même croisière que le joueur)
+    private static final float ENEMY_SPEED = 80f;     // m/s (~360 km/h : même croisière que le joueur)
     private static final float ENEMY_CENTER_X = 1000f; // centre du circuit (position de départ du joueur)
     private static final float ENEMY_CENTER_Z = 1000f;
     private static final float ENEMY_ALTITUDE = 1000f; // altitude de la patrouille (m)
@@ -100,7 +101,7 @@ public class Main extends ApplicationAdapter {
     private static final Color GROUND_COLOR = new Color(0.3f, 0.55f, 0.25f, 1f);
     private static final Color PLANE_COLOR = new Color(0.9f, 0.3f, 0.15f, 1f);
     private static final Color ENEMY_COLOR = new Color(0.15f, 0.35f, 0.85f, 1f);
-    private static final Color BULLET_COLOR = new Color(1f, 0.85f, 0.2f, 1f);
+    private static final Color BULLET_COLOR = Color.RED;
 
     private btDynamicsWorld world;
     private btDefaultCollisionConfiguration collisionConfiguration;
@@ -171,7 +172,7 @@ public class Main extends ApplicationAdapter {
         Bullet.init();
 
         BitmapFont bitmapFont = new BitmapFont();
-        stage = new Stage();
+        stage = new Stage(new ScreenViewport());
         infoLabel = new Label(null, new Label.LabelStyle(bitmapFont, Color.WHITE));
         infoLabel.setPosition(10, 80);
         stage.addActor(infoLabel);
@@ -196,23 +197,14 @@ public class Main extends ApplicationAdapter {
         // Création des modèles 3D graphiques via ModelBuilder
         ModelBuilder modelBuilder = new ModelBuilder();
 
-        planeModel = modelBuilder.createBox(
-            PLANE_SIZE, PLANE_SIZE, PLANE_SIZE,
-            new Material(ColorAttribute.createDiffuse(PLANE_COLOR)),
-            com.badlogic.gdx.graphics.VertexAttributes.Usage.Position | com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal
-        );
-        planeInstance = new ModelInstance(planeModel);
+        ModelLoader loader = new ObjLoader();
+        Model spitModel = loader.loadModel(Gdx.files.internal("spit.obj"));
+        planeInstance = new ModelInstance(spitModel);
+        planeInstance.transform.rotate(Vector3.Y, 180);
 
-        enemyModel = modelBuilder.createBox(
-            PLANE_SIZE, PLANE_SIZE, PLANE_SIZE,
-            new Material(ColorAttribute.createDiffuse(ENEMY_COLOR)),
-            com.badlogic.gdx.graphics.VertexAttributes.Usage.Position | com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal
-        );
-        enemyInstance = new ModelInstance(enemyModel);
+        enemyInstance = new ModelInstance(spitModel);
 
 
-//        ModelLoader loader = new ObjLoader();
-//        groundModel = loader.loadModel(Gdx.files.internal("dnisland.obj"));
         groundModel = modelBuilder.createBox(
             100000f, 1f, 100000f,
             new Material(ColorAttribute.createDiffuse(GROUND_COLOR)),
@@ -481,6 +473,7 @@ public class Main extends ApplicationAdapter {
         enemyUp.set(rx * sb, cb, rz * sb);          // up'   = right·sb + upMonde·cb (bank vers l'intérieur)
         enemyBack.set(sa, 0f, -ca);                 // local +Z = arrière (le nez du modèle est en -Z)
         enemyInstance.transform.set(enemyRight, enemyUp, enemyBack, enemyPos);
+        enemyInstance.transform.rotate(Vector3.Y, 90);
         enemyBody.setWorldTransform(enemyInstance.transform);
 
         // Mise à jour de la simulation physique
@@ -507,29 +500,20 @@ public class Main extends ApplicationAdapter {
         planeInstance.transform.getTranslation(planePos);
 
         // Position de la caméra fixée dans le cockpit (légèrement au-dessus du centre)
-        Vector3 cockpitPos = planePos.cpy().add(up.cpy().scl(0.5f));
+        Vector3 cockpitPos = planePos.cpy().add(up.cpy().scl(0.7f));
         camera.position.set(cockpitPos);
 
         // Direction du regard de base (vers l'avant de l'avion)
-        Vector3 lookDir = forward.cpy().scl(20f);
+        Vector3 lookDir = forward.cpy();
 
         // Rotation du regard avec le stick droit (Freecam à l'intérieur du cockpit)
         if (Math.abs(freeCamYaw) > 0.0001f || Math.abs(freeCamPitch) > 0.0001f) {
-            float cy = (float) Math.cos(freeCamYaw);
-            float sy = (float) Math.sin(freeCamYaw);
-            float x = lookDir.x * cy + lookDir.z * sy;
-            float z = lookDir.z * cy - lookDir.x * sy;
-            lookDir.x = x;
-            lookDir.z = z;
-
-            Vector3 rightAxis = scratchA.set(forward).crs(up);
-            float cp = (float) Math.cos(freeCamPitch);
-            float sp = (float) Math.sin(freeCamPitch);
-            Vector3 cross = rightAxis.crs(lookDir);
-            lookDir.scl(cp).add(cross.scl(sp));
+            Vector3 rightLocal = scratchA.set(forward).crs(up).nor();
+            lookDir.rotate(up, MathUtils.radiansToDegrees * freeCamYaw);
+            lookDir.rotate(rightLocal, MathUtils.radiansToDegrees * freeCamPitch);
         }
 
-        Vector3 lookTarget = cockpitPos.cpy().add(lookDir);
+        Vector3 lookTarget = cockpitPos.cpy().add(lookDir.scl(20f));
         camera.lookAt(lookTarget);
         camera.up.set(up);
         camera.update();
@@ -589,7 +573,7 @@ public class Main extends ApplicationAdapter {
             float reticuleY = screenPos.y;
 
             // Couleur cyan holographique lumineuse
-            shapeRenderer.setColor(0f, 0.9f, 1f, 0.75f);
+            shapeRenderer.setColor(Color.YELLOW);
 
             // Cercle extérieur et point central
             shapeRenderer.circle(reticuleX, reticuleY, 25f);
@@ -649,6 +633,7 @@ public class Main extends ApplicationAdapter {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.update();
+        stage.getViewport().update(width, height, true);
     }
 
     @Override

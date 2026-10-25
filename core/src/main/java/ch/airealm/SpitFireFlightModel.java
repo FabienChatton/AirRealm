@@ -7,24 +7,27 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 
 public class SpitFireFlightModel implements FlightModel {
-    private static final float THRUST = 8f;
-    private static final float WING_COEF = 0.0049f;
-    private static final float CL0 = 0.2f;
-    private static final float CL_SLOPE = 10f;
-    private static final float ALPHA_STALL = 0.262f;
-    private static final float STALL_DROP = 3.0f;
-    private static final float CD0 = 0.02f;
-    private static final float CD_INDUCED = 0.002f;
-    private static final float STALL_DRAG = 0.008f;
-    private static final float PITCH_EFF = 0.008f;
-    private static final float RUDDER_EFF = 0.005f;
-    private static final float CM_ALPHA = -0.030f;
-    private static final float CN_BETA = -0.003f;
-    private static final float CN_A = 0.002f;
-    private static final float DAMP = 0.016f;
-
+    private static final float THRUST = 8f; // Accélération max (m/s²) fournie par le moteur à pleine poussée
+    private static final float WING_COEF = 0.0049f; // Échelle de la portance : accél. lift ≈ coef × CL × V²
+    private static final float CL0 = 0.2f; // Coefficient de portance à angle d'incidence nul (avion trimmé)
+    private static final float CL_SLOPE = 10f; // Pente de la courbe de portance : dCL/dα (portance gagnée par inc. d'α)
+    private static final float ALPHA_STALL = 0.262f; // Angle d'incidence (rad) au-delà duquel l'aile décroche (stall)
+    private static final float STALL_DROP = 3.0f; // Perte de portance au-delà du stall (CL chute de 3.0 par rad de surinc. → chute du nez)
+    // drag
+    private static final float CD0 = 0.02f; // Traînée parasite de base (frottement, traînée du fuselage)
+    private static final float CD_INDUCED = 0.0002f; // Traînée induite par la portance (∝ CL²) : plus tu portes, plus tu traînes
+    private static final float STALL_DRAG = 0.008f; // Traînée supplémentaire ajoutée en régime de décrochage (le nez freine)
+    // input responsive
+    private static final float PITCH_EFF = 0.008f; // Efficacité de la profondeur : à quelle vitesse l'input fait cabrer/piquer
+    private static final float RUDDER_EFF = 0.005f; // Efficacité du safran (dérive) : input → rotation en lacet
     private static final float ROLL_RATE = 1.5f;
     private static final float ROLL_DAMP = 3.3f;
+    // stabilité
+    private static final float CM_ALPHA = -0.030f; // Stabilité longitudinale : moment par rad d'incidence (négatif = stable, l'avion revient vers zéro d'incidence)
+    private static final float CN_BETA = -0.003f; // Stabilité directionnelle : moment par rad de glissement latéral (effet "pointe de flèche")
+    private static final float CN_A = 0.002f; // Contribution du safran au lacet (efficacité directionnelle de la dérive)
+    private static final float DAMP = 0.016f; // Amortissement général des rotations (évite les oscillations/cabrage instable)
+
     private static final float GRAVITY = 9.81f;
     private static final float MAX_G = 6f;
 

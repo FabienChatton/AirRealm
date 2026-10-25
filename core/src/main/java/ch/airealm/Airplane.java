@@ -13,8 +13,9 @@ public class Airplane {
     private final btRigidBody body;
     private final btBoxShape shape;
     private final FlightModel flightModel;
+    private boolean isDead;
 
-    private float throttle = 0f;
+    private float throttle = 0.8f;
 
     public Airplane(Model model, FlightModel flightModel, btDynamicsWorld world, Matrix4 initialPosition, float initialSpeed) {
         this.flightModel = flightModel;
@@ -42,6 +43,16 @@ public class Airplane {
 
     public void setThrottle(float throttle) {
         this.throttle = Math.clamp(throttle, 0f, 1f);
+    }
+
+    public boolean isDead() { return isDead; }
+    public void setDead(boolean dead) {
+        this.isDead = dead;
+        if (dead) {
+            this.throttle = 0f;
+            body.setLinearVelocity(Vector3.Zero);
+            body.setAngularVelocity(Vector3.Zero);
+        }
     }
 
     public float getThrottle() { return throttle; }

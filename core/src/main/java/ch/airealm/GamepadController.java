@@ -27,7 +27,6 @@ public class GamepadController implements PlayerController {
     @Override
     public float getRudderInput() {
         if (controller == null) return 0f;
-        // Utilisation des axes de gâchettes analogiques (LT / RT)
         float lt = padAxis(controller.getAxis(4));
         float rt = padAxis(controller.getAxis(5));
         if (lt > 0f) return lt;

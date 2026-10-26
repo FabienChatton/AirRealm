@@ -109,7 +109,6 @@ public class PlayerView {
         airplane.getPosition(planePos);
 
         if (airplane.isDead()) {
-            // Label de fin / mort au milieu de l'écran splitté
             infoLabel.setText("=== MORT ! ===");
             infoLabel.setPosition(viewWidth / 2f - 50f, viewHeight / 2f);
             stage.draw();

@@ -126,7 +126,7 @@ public class Main extends ApplicationAdapter {
         });
 
         // Joueur 1
-        Matrix4 p1Transform = new Matrix4().idt().translate(0, 500f, 0f);
+        Matrix4 p1Transform = new Matrix4().idt().translate(0, 1000f, 0f);
         p1Transform.rotate(Vector3.Y, 180f);
         player1 = new Airplane(spitModel, new SpitFireFlightModel(), world, p1Transform, -INITIAL_SPEED);
 

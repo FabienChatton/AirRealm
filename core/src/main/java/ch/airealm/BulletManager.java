@@ -16,7 +16,7 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 
 public class BulletManager {
     private static final int MAX_BULLETS = 48;
-    private static final float BULLET_SPEED = 300f;
+    private static final float BULLET_SPEED = 850f;
     private static final float BULLET_SIZE = 0.5f;
     private static final float BULLET_LIFETIME = 4f;
     private static final float BULLET_RESTITUTION = 0.7f;

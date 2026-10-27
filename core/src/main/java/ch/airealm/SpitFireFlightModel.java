@@ -17,6 +17,7 @@ public class SpitFireFlightModel implements FlightModel {
     private static final float CD0 = 0.02f; // Traînée parasite de base (frottement, traînée du fuselage)
     private static final float CD_INDUCED = 0.0002f; // Traînée induite par la portance (∝ CL²) : plus tu portes, plus tu traînes
     private static final float STALL_DRAG = 0.008f; // Traînée supplémentaire ajoutée en régime de décrochage (le nez freine)
+    private static final float LATERAL_DAMPING = 0.04f;
     // input responsive
     private static final float PITCH_EFF = 0.008f; // Efficacité de la profondeur : à quelle vitesse l'input fait cabrer/piquer
     private static final float RUDDER_EFF = 0.005f; // Efficacité du safran (dérive) : input → rotation en lacet
@@ -111,6 +112,10 @@ public class SpitFireFlightModel implements FlightModel {
             scratchA.x -= DAMP * q * omegaWorld.x;
             scratchA.y -= DAMP * q * omegaWorld.y;
             body.applyTorque(scratchA);
+
+            float lateralSpeed = velWorld.dot(right);
+
+            body.applyCentralForce(scratchA.set(right).scl(-lateralSpeed * q * LATERAL_DAMPING));
         } else {
             isStalling = false;
         }

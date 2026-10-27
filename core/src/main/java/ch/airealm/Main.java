@@ -1,4 +1,5 @@
 package ch.airealm;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
@@ -29,9 +30,12 @@ public class Main extends ApplicationAdapter {
 
     private static final float INITIAL_SPEED = 100f;
     private static final float SKY_RADIUS = 2500f;
+    private static final int NUM_TREES = 2000;
 
     private static final Color SKY_COLOR = new Color(0.45f, 0.7f, 1f, 1f);
     private static final Color GROUND_COLOR = new Color(0.3f, 0.55f, 0.25f, 1f);
+    private static final Color TRUNK_COLOR = new Color(0.55f, 0.27f, 0.07f, 1f);
+    private static final Color LEAVES_COLOR = new Color(0.1f, 0.45f, 0.1f, 1f);
 
     private btDiscreteDynamicsWorld world;
     private btDefaultCollisionConfiguration collisionConfiguration;
@@ -54,6 +58,8 @@ public class Main extends ApplicationAdapter {
     private Model spitModel;
     private Model groundModel;
     private ModelInstance groundInstance;
+    private Model treeModel;
+    private final ModelInstance[] treeInstances = new ModelInstance[NUM_TREES];
 
     private Airplane player1;
     private Airplane player2;
@@ -86,8 +92,9 @@ public class Main extends ApplicationAdapter {
         ModelLoader loader = new ObjLoader();
         spitModel = loader.loadModel(Gdx.files.internal("spit.obj"));
 
+        Vector3 groundVec = new Vector3(5000f, 1f, 5000f);
         groundModel = modelBuilder.createBox(
-            5000f, 1f, 5000f,
+            groundVec.x, groundVec.y, groundVec.z,
             new Material(ColorAttribute.createDiffuse(GROUND_COLOR)),
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
         );
@@ -107,7 +114,7 @@ public class Main extends ApplicationAdapter {
         world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
         world.setGravity(new Vector3(0f, -9.81f, 0f));
 
-        groundShape = new btBoxShape(new Vector3(5000f, 0.5f, 5000f));
+        groundShape = new btBoxShape(groundVec.scl(0.5f));
         groundBody = new btRigidBody(0f, null, groundShape);
         groundBody.setWorldTransform(groundInstance.transform);
         world.addRigidBody(groundBody);
@@ -141,6 +148,35 @@ public class Main extends ApplicationAdapter {
 
         // Gestionnaire de tirs
         bulletManager = new BulletManager(modelBuilder, world);
+
+
+        modelBuilder.begin();
+        // Tronc (cylindre)
+        modelBuilder.node().id = "trunk";
+        modelBuilder.part("trunk", GL20.GL_TRIANGLES,
+            com.badlogic.gdx.graphics.VertexAttributes.Usage.Position | com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal,
+            new Material(ColorAttribute.createDiffuse(TRUNK_COLOR))
+        ).cylinder(1f, 6f, 1f, 8);
+
+        // Feuillage (cône positionné au-dessus du tronc)
+        modelBuilder.node().id = "leaves";
+        modelBuilder.node().translation.set(0f, 4f, 0f);
+        modelBuilder.part("leaves", GL20.GL_TRIANGLES,
+            com.badlogic.gdx.graphics.VertexAttributes.Usage.Position | com.badlogic.gdx.graphics.VertexAttributes.Usage.Normal,
+            new Material(ColorAttribute.createDiffuse(LEAVES_COLOR))
+        ).cone(6f, 8f, 6f, 10);
+
+        treeModel = modelBuilder.end();
+
+        // Placement aléatoire des arbres autour de la map (évite la zone de départ trop près du centre si tu veux)
+        for (int i = 0; i < NUM_TREES; i++) {
+            treeInstances[i] = new ModelInstance(treeModel);
+            float x = MathUtils.random(-groundVec.x, groundVec.x);
+            float z = MathUtils.random(-groundVec.x, groundVec.x);
+            float y = 1f;
+
+            treeInstances[i].transform.setToTranslation(x, y, z);
+        }
 
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -270,6 +306,9 @@ public class Main extends ApplicationAdapter {
         batch.render(player2.getInstance(), environment);
         bulletManager.render(batch, environment);
         batch.render(groundInstance, environment);
+        for (int i = 0; i < NUM_TREES; i++) {
+            batch.render(treeInstances[i], environment);
+        }
         batch.end();
     }
 
@@ -282,24 +321,25 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void dispose() {
-        batch.dispose();
-        spitModel.dispose();
-        groundModel.dispose();
-        skyModel.dispose();
-        skyTexture.dispose();
-
-        bulletManager.dispose();
-        world.dispose();
-        solver.dispose();
-        broadphase.dispose();
-        dispatcher.dispose();
-        collisionConfiguration.dispose();
-
-        player1.dispose(world);
-        player2.dispose(world);
-
-        shapeRenderer.dispose();
-        viewP1.dispose();
-        viewP2.dispose();
+//        batch.dispose();
+//        spitModel.dispose();
+//        groundModel.dispose();
+//        skyModel.dispose();
+//        skyTexture.dispose();
+//        treeModel.dispose();
+//
+//        bulletManager.dispose();
+//        solver.dispose();
+//        broadphase.dispose();
+//        dispatcher.dispose();
+//        collisionConfiguration.dispose();
+//
+//        player1.dispose(world);
+//        player2.dispose(world);
+//
+//        shapeRenderer.dispose();
+//        viewP1.dispose();
+//        viewP2.dispose();
+//        world.dispose();
     }
 }

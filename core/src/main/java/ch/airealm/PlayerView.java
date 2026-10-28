@@ -17,6 +17,7 @@ public class PlayerView {
     private final PerspectiveCamera camera;
     private final Stage stage;
     private final Label infoLabel;
+    private final BitmapFont font;
 
     private float freeCamYaw = 0f;
     private float freeCamPitch = 0f;
@@ -43,6 +44,7 @@ public class PlayerView {
         this.stage = new Stage(new ScreenViewport());
         this.infoLabel = new Label(null, new Label.LabelStyle(font, Color.WHITE));
         this.stage.addActor(infoLabel);
+        this.font = font;
     }
 
     public void update(PlayerController input, float dt) {
@@ -176,6 +178,13 @@ public class PlayerView {
                 // Cercle autour de l'ennemi
                 shapeRenderer.circle(enemyScreenPos.x, enemyScreenPos.y, 15f);
 
+                stage.getBatch().begin();
+                float dstEnemyPos = planePos.dst(enemyPos);
+                String dstEnemyPosString = String.format("%6.1f", dstEnemyPos);
+                int charWidth = 8;
+                float dstPosX = enemyScreenPos.x - (charWidth * dstEnemyPosString.length() / 2f);
+                font.draw(stage.getBatch(), dstEnemyPosString, dstPosX, enemyScreenPos.y + 30);
+                stage.getBatch().end();
                 shapeRenderer.end();
                 Gdx.gl.glDisable(Gdx.gl.GL_BLEND);
             }

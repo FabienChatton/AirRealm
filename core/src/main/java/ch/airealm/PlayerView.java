@@ -123,7 +123,8 @@ public class PlayerView {
         float speed = velNow.len();
 
         infoLabel.setText(
-            prefix + " SPD " + String.format("%6.1f m/s, %6.1f km/h", speed, speed * 3.6f) + "\n" +
+                prefix + "\n" +
+                "SPD " + String.format("%6.1f m/s, %6.1f km/h", speed, speed * 3.6f) + "\n" +
                 "THROTTLE " + String.format("%6.1f", airplane.getThrottle()) + "\n" +
                 "ALT " + String.format("%6.1f m", planePos.y) + "\n" +
                 "CLB " + String.format("%+6.1f m/s", airplane.getFlightModel().getClimbRate()) + "\n" +

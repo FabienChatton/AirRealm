@@ -43,6 +43,7 @@ public class PlayerView {
 
         this.stage = new Stage(new ScreenViewport());
         this.infoLabel = new Label(null, new Label.LabelStyle(font, Color.WHITE));
+        this.infoLabel.setFontScale(1.2f);
         this.stage.addActor(infoLabel);
         this.font = font;
     }
@@ -118,7 +119,7 @@ public class PlayerView {
         }
 
         // HUD normal en haut à gauche de la vue
-        infoLabel.setPosition(10, 80);
+        infoLabel.setPosition(10, Gdx.graphics.getHeight() / 2f);
         Vector3 velNow = airplane.getBody().getLinearVelocity();
         float speed = velNow.len();
 
